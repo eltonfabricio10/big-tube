@@ -10,9 +10,9 @@ gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, Gio
 
 # Configurar Gettext
-LOCALE_DIR = os.path.join(os.path.dirname(__file__), "locale")
-gettext.bindtextdomain("video_downloader", LOCALE_DIR)
-gettext.textdomain("video_downloader")
+LOCALE_DIR = "/usr/share/locale"
+gettext.bindtextdomain("big-tube", LOCALE_DIR)
+gettext.textdomain("big-tube")
 _ = gettext.gettext
 
 
@@ -27,11 +27,17 @@ class OptionsWindow(Gtk.Window):
         self.config = config
 
         # Main Box
-        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        main_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=10
+        )
         self.set_child(main_box)
 
         # Pasta Padrão
-        folder_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        folder_box = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            spacing=10
+        )
         main_box.append(folder_box)
 
         folder_label = Gtk.Label(label=_("Download Directory:"))
@@ -46,7 +52,10 @@ class OptionsWindow(Gtk.Window):
         folder_box.append(select_folder_button)
 
         # Formato Padrão
-        format_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        format_box = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            spacing=10
+        )
         main_box.append(format_box)
 
         format_label = Gtk.Label(label=_("Default Format:"))
@@ -57,13 +66,25 @@ class OptionsWindow(Gtk.Window):
         audio_formats = ["mp3", "aac", "ogg", "wav", "flac"]
         self.all_formats = video_formats + audio_formats
 
-        self.format_list = Gtk.StringList.new([fmt.upper() for fmt in self.all_formats])
-        self.format_dropdown = Gtk.DropDown.new(model=self.format_list, expression=None)
-        self.format_dropdown.set_selected(self.all_formats.index(self.config.get("default_format", "mp4")))
+        self.format_list = Gtk.StringList.new([
+            fmt.upper() for fmt in self.all_formats
+        ])
+        self.format_dropdown = Gtk.DropDown.new(
+            model=self.format_list,
+            expression=None
+        )
+        self.format_dropdown.set_selected(
+            self.all_formats.index(
+                self.config.get("default_format", "mp4")
+            )
+        )
         format_box.append(self.format_dropdown)
 
         # Botões de Ação
-        action_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        action_box = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            spacing=10
+        )
         main_box.append(action_box)
 
         cancel_button = Gtk.Button(label=_("Cancel"))
@@ -98,7 +119,9 @@ class OptionsWindow(Gtk.Window):
 
     def on_save_clicked(self, button):
         self.config["download_dir"] = self.folder_entry.get_text()
-        self.config["default_format"] = self.all_formats[self.format_dropdown.get_selected()]
+        self.config["default_format"] = self.all_formats[
+            self.format_dropdown.get_selected()
+        ]
         save_config(self.config)
         self.destroy()
 
@@ -106,7 +129,7 @@ class OptionsWindow(Gtk.Window):
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.set_title(_("Video Downloader"))
+        self.set_title(_("BigTube"))
         self.set_default_size(800, 600)
 
         # Carregar configurações
@@ -146,7 +169,11 @@ class MainWindow(Gtk.ApplicationWindow):
     def on_download_clicked(self, button):
         # Obter URLs do TextView
         buffer = self.url_textview.get_buffer()
-        text = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), False)
+        text = buffer.get_text(
+            buffer.get_start_iter(),
+            buffer.get_end_iter(),
+            False
+        )
         urls = [url.strip() for url in text.splitlines() if url.strip()]
 
         if not urls:
@@ -165,7 +192,7 @@ class MainWindow(Gtk.ApplicationWindow):
             print(f"Downloading video from: {url}")
 
 
-class MyApp(Adw.Application):
+class BigTubeApp(Adw.Application):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.connect('activate', self.on_activate)
@@ -176,5 +203,5 @@ class MyApp(Adw.Application):
 
 
 if __name__ == "__main__":
-    app = MyApp(application_id="com.example.VideoDownloader")
+    app = BigTubeApp(application_id="org.biglinux.tube")
     app.run(None)

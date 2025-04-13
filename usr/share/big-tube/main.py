@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import gettext
 from utils.config_handler import load_config, save_config

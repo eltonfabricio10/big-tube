@@ -1,3 +1,2 @@
-# biglinux-tube
+# big-tube
 
-**Interface for yt-dlp in BBV**

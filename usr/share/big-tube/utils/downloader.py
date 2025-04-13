@@ -1,17 +1,30 @@
 # -*- coding: utf-8 -*-
+from i18n import _
 import yt_dlp
 import os
 
 
-def download_video(url, output_dir, format="mp4"):
+def download_video(url, output_dir, media_format):
     ydl_opts = {
-        'format': f'bestvideo+bestaudio/best',
-        'outtmpl': os.path.join(output_dir, f'%(title)s.{format}'),
+        'format': media_format,
+        'outtmpl': os.path.join(output_dir, '%(title)s.%(ext)s'),
+        'postprocessors': [],
     }
 
+    if media_format in ["mp3", "aac", "ogg", "wav", "flac"]:
+        # Extrair áudio
+        ydl_opts['postprocessors'].append({
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': media_format,
+            'preferredquality': '192',
+        })
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        return os.path.join(output_dir, f"{info['title']}.{format}")
+        try:
+            ydl.download([url])
+            print(f"Downloaded successfully: {url}")
+        except Exception as e:
+            print(f"Error downloading {url}: {e}")
 
 
 def download_subtitles(url, language="en", output_dir="."):

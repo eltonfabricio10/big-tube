@@ -52,14 +52,17 @@ def validate_url(url):
     """Valida se a string é uma URL válida"""
     try:
         result = urllib.parse.urlparse(url)
-        return all([result.scheme, result.netloc])
+        return all([
+            result.scheme in ['http', 'https', 'ftp'],
+            result.netloc
+        ])
     except:
         return False
 
 def sanitize_filename(filename):
     """Sanitiza um nome de arquivo removendo caracteres inválidos"""
     # Remove caracteres não permitidos em sistemas de arquivos
-    invalid_chars = r'[<>:"/\\|?*]'
+    invalid_chars = r'[<>:"/\\|?*\x00-\x1F]'
     sanitized = re.sub(invalid_chars, '_', filename)
 
     # Limita o tamanho do nome de arquivo

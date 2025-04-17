@@ -13,7 +13,8 @@ class DownloadRow(Gtk.ListBoxRow):
     # Sinais personalizados
     __gsignals__ = {
         'cancel-clicked': (GObject.SignalFlags.RUN_FIRST, None, ()),
-        'play-clicked': (GObject.SignalFlags.RUN_FIRST, None, ())
+        'play-clicked': (GObject.SignalFlags.RUN_FIRST, None, ()),
+        'open-folder-clicked': (GObject.SignalFlags.RUN_FIRST, None, ())
     }
 
     def __init__(self, parent_window):
@@ -59,6 +60,12 @@ class DownloadRow(Gtk.ListBoxRow):
         self.cancel_button.connect("clicked", self.on_cancel_clicked)
         header_box.append(self.cancel_button)
 
+        self.open_folder_button = Gtk.Button.new_from_icon_name("folder-symbolic")
+        self.open_folder_button.set_tooltip_text("Abrir pasta do arquivo")
+        self.open_folder_button.set_sensitive(False)
+        self.open_folder_button.connect("clicked", self.on_open_folder_clicked)
+        header_box.append(self.open_folder_button)
+
         # Segunda linha: barra de progresso e status
         progress_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
         progress_box.set_margin_top(6)
@@ -89,3 +96,7 @@ class DownloadRow(Gtk.ListBoxRow):
     def on_play_clicked(self, button):
         """Emite o sinal quando o botão de reproduzir é clicado"""
         self.emit("play-clicked")
+
+    def on_open_folder_clicked(self, button):
+        """Emite o sinal quando o botão de abrir pasta é clicado"""
+        self.emit("open-folder-clicked")

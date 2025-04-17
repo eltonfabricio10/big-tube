@@ -85,6 +85,7 @@ class DownloadManager:
         }
 
         # Carrega o histórico de downloads
+        self.semaphore = threading.Semaphore(config.get('max_downloads', 3))
         self.load_history()
 
     def add_callback(self, event_type, callback):
@@ -143,35 +144,36 @@ class DownloadManager:
 
     def start_download(self, url, download_row, audio_only=False, file_format="mp4", quality="Melhor"):
         """Inicia um download de vídeo"""
-        # Cria um novo item de download
-        download_item = DownloadItem(url, self.config['download_dir'], {
-            'audio_only': audio_only,
-            'format': file_format,
-            'quality': quality
-        })
+        with self.semaphore:
+            # Cria um novo item de download
+            download_item = DownloadItem(url, self.config['download_dir'], {
+                'audio_only': audio_only,
+                'format': file_format,
+                'quality': quality
+            })
 
-        # Adiciona aos downloads ativos
-        self.active_downloads.append(download_item)
+            # Adiciona aos downloads ativos
+            self.active_downloads.append(download_item)
 
-        # Verifica espaço em disco
-        if not check_disk_space(self.config['download_dir']):
-            error_msg = "Espaço em disco insuficiente para o download."
-            GLib.idle_add(self._download_error, download_item, download_row, error_msg)
-            return
+            # Verifica espaço em disco
+            if not check_disk_space(self.config['download_dir']):
+                error_msg = "Espaço em disco insuficiente para o download."
+                GLib.idle_add(self._download_error, download_item, download_row, error_msg)
+                return
 
-        # Iniciar o download em uma thread separada
-        thread = threading.Thread(
-            target=self._download_video_thread,
-            args=(download_item, download_row)
-        )
-        thread.daemon = True
-        self.download_threads.append(thread)
-        thread.start()
+            # Iniciar o download em uma thread separada
+            thread = threading.Thread(
+                target=self._download_video_thread,
+                args=(download_item, download_row)
+            )
+            thread.daemon = True
+            self.download_threads.append(thread)
+            thread.start()
 
-        # Notifica os callbacks
-        self._trigger_callbacks('download_start', download_item)
+            # Notifica os callbacks
+            self._trigger_callbacks('download_start', download_item)
 
-        return download_item
+            return download_item
 
     def cancel_download(self, download_item, download_row):
         """Cancela um download em andamento"""
@@ -193,6 +195,8 @@ class DownloadManager:
     def clean_finished_threads(self):
         """Remove threads que já terminaram"""
         self.download_threads = [t for t in self.download_threads if t.is_alive()]
+        if len(self.download_history) > 30:
+            self.download_history = self.download_history[-30:]
 
     def update_download_progress(self, download_item, download_row, fraction, status_text):
         """Atualiza o progresso do download na UI"""
@@ -220,6 +224,7 @@ class DownloadManager:
         download_row.progress_bar.set_fraction(1.0)
         download_row.status_label.set_text(download_item.status)
         download_row.play_button.set_sensitive(True)
+        download_row.open_folder_button.set_sensitive(True)
         download_row.cancel_button.set_sensitive(False)
 
         # Toca som de notificação

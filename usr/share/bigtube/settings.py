@@ -39,6 +39,7 @@ class Settings:
 
         # Carregar configurações salvas
         self.load()
+        self.validate_config()
 
     def __getitem__(self, key):
         return self.config.get(key)
@@ -70,6 +71,14 @@ class Settings:
         except Exception as e:
             print(f"Erro ao salvar configurações: {e}")
             return False
+
+    def validate_config(self):
+        """Valida e corrige configurações"""
+        if not os.path.exists(self.config['download_dir']):
+            self.config['download_dir'] = str(Path.home() / "Downloads")
+
+        # Validações adicionais
+        self.config['max_downloads'] = max(1, min(self.config.get('max_downloads', 3), 10))
 
     def get(self, key, default=None):
         """Obtém um valor de configuração"""

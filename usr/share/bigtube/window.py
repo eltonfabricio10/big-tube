@@ -207,9 +207,6 @@ class BigTubeWindow(Adw.ApplicationWindow):
         self.no_downloads_label.set_margin_bottom(24)
         self.downloads_list_box.append(self.no_downloads_label)
 
-        # Definir o conteúdo principal
-        self.set_content(self.content_box)
-
         # Conectar sinais adicionais
         self.url_entry.connect("activate", self.on_download_clicked)
         self.url_entry.connect("changed", self.on_url_changed)
@@ -354,6 +351,7 @@ class BigTubeWindow(Adw.ApplicationWindow):
         # Conecta o sinal de cancelamento
         download_row.connect("cancel-clicked", self.on_cancel_download, download_item)
         download_row.connect("play-clicked", self.on_play_download, download_item)
+        download_row.connect("open-folder-clicked", self.open_folder_download, download_item)
 
         # Limpa a entrada de URL
         self.url_entry.set_text("")
@@ -370,6 +368,22 @@ class BigTubeWindow(Adw.ApplicationWindow):
                 self.show_error_message(
                     f"Não foi possível abrir o arquivo: {download_item.output_file}"
                 )
+
+    def open_folder_download(self, download_row, download_item):
+        if download_item.output_file and os.path.exists(download_item.output_file):
+            # Obtém o diretório do arquivo
+            folder_path = os.path.dirname(download_item.output_file)
+
+            try:
+                # Usa o método padrão do sistema para abrir a pasta
+                Gtk.show_uri(
+                    self,
+                    f"file://{folder_path}",
+                    Gdk.CURRENT_TIME
+                )
+            except Exception as e:
+                # Mostra um toast de erro se não conseguir abrir
+                self.show_error_message(f"Não foi possível abrir a pasta: {e}")
 
     def on_download_complete(self, download_item):
         """Chamado quando um download é concluído"""
@@ -399,7 +413,6 @@ class BigTubeWindow(Adw.ApplicationWindow):
     def show_error_message(self, message):
         """Mostra uma mensagem de erro usando um toast"""
         toast = Adw.Toast.new(message)
-        toast.set_button_label("✕")
         toast.set_priority(Adw.ToastPriority.HIGH)
         toast.set_timeout(0)
         self.toast_overlay.add_toast(toast)
